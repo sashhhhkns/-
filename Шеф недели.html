@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шеф Недели — меню по вашему бюджету</title>
+<style>
+  :root { --green:#2E7D32; --green-d:#1B5E20; --bg:#F4F7F5; --card:#fff; --ink:#263238; --muted:#607D8B; }
+  * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Arial, sans-serif; }
+  body { background:var(--bg); color:var(--ink); }
+  header { background:var(--green-d); color:#fff; padding:14px 24px; display:flex; align-items:center; gap:12px; }
+  header .logo { font-size:22px; font-weight:800; letter-spacing:.5px; }
+  nav { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  nav button { background:rgba(255,255,255,.12); color:#fff; border:none; padding:9px 16px; border-radius:20px; cursor:pointer; font-size:14px; }
+  nav button.active, nav button:hover { background:#fff; color:var(--green-d); font-weight:600; }
+  main { max-width:1000px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  .sub { color:var(--muted); margin-bottom:20px; }
+  .card { background:var(--card); border-radius:14px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:18px; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; }
+  .col { flex:1 1 260px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  input[type=range] { width:100%; }
+  select, input[type=text] { width:100%; padding:10px; border:1px solid #CFD8DC; border-radius:8px; font-size:14px; }
+  .value { font-weight:700; color:var(--green); }
+  .btn { background:var(--green); color:#fff; border:none; padding:13px 26px; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; margin-top:14px; }
+  .btn:hover { background:var(--green-d); }
+  .btn.ghost { background:#fff; color:var(--green); border:1.5px solid var(--green); }
+  .meal { border:1px solid #E0E7E3; border-left:5px solid var(--green); border-radius:10px; padding:14px 16px; margin-bottom:12px; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+  .meal b { display:block; font-size:16px; }
+  .meal .meta { color:var(--muted); font-size:13px; margin-top:3px; }
+  .meal .price { font-weight:800; color:var(--green-d); white-space:nowrap; }
+  .rating span { cursor:pointer; font-size:18px; color:#CFD8DC; }
+  .rating span.on { color:#F9A825; }
+  .checkline { display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px dashed #E0E7E3; }
+  .checkline input { width:18px; height:18px; }
+  .checkline .cat { font-size:12px; color:var(--muted); margin-left:auto; }
+  .strike { text-decoration:line-through; color:#9E9E9E; }
+  .total { text-align:right; font-size:18px; font-weight:800; color:var(--green-d); margin-top:12px; }
+  .badge-week { display:inline-block; background:#E8F5E9; color:var(--green-d); padding:4px 12px; border-radius:14px; font-size:13px; font-weight:700; margin-bottom:14px; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .chip { padding:6px 14px; border-radius:16px; border:1.5px solid #CFD8DC; cursor:pointer; font-size:13px; }
+  .chip.on { background:var(--green); border-color:var(--green); color:#fff; }
+  .hint { background:#FFF8E1; border-left:4px solid #FBC02D; padding:10px 14px; border-radius:8px; font-size:13px; margin-top:16px; }
+  .slot { border:1.5px solid #CFD8DC; border-radius:10px; padding:12px; text-align:center; cursor:pointer; font-size:14px; }
+  .slot.on { border-color:var(--green); background:#E8F5E9; font-weight:700; color:var(--green-d); }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .ok-msg { display:none; margin-top:12px; background:#E8F5E9; color:var(--green-d); padding:12px 16px; border-radius:10px; font-weight:600; }
+  footer { text-align:center; color:#B0BEC5; font-size:12px; padding:20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🥗 Шеф Недели</div>
+  <nav>
+    <button data-scr="home" class="active">Главный</button>
+    <button data-scr="menu">Меню недели</button>
+    <button data-scr="list">Список покупок</button>
+    <button data-scr="order">Доставка</button>
+    <button data-scr="profile">Профиль</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ГЛАВНЫЙ ЭКРАН -->
+  <section class="screen active" id="scr-home">
+    <h1>Соберём меню на неделю под ваш бюджет</h1>
+    <p class="sub">Укажите параметры — и получите 7 ужинов, список покупок и корзину доставки за 1 минуту.</p>
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label>Бюджет на продукты на неделю: <span class="value" id="budgetVal">2 000 ₽</span></label>
+          <input type="range" id="budget" min="1000" max="6000" step="250" value="2000">
+          <label>Сколько человек готовим:</label>
+          <select id="people">
+            <option>1 человек</option><option selected>2 человека</option><option>3–4 человека</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Предпочтения (можно несколько):</label>
+          <div class="chips" id="prefs">
+            <span class="chip on">Курица</span><span class="chip">Рыба</span><span class="chip on">Овощи</span>
+            <span class="chip">Мясо</span><span class="chip">Без лактозы</span><span class="chip">Быстро (до 30 мин)</span>
+          </div>
+          <div class="hint">💡 Сервис подберёт меню так, чтобы продукты из ужинов использовались и на обеды — ничего не пропадёт.</div>
+        </div>
+      </div>
+      <button class="btn" onclick="generateMenu()">Собрать меню на неделю →</button>
+    </div>
+  </section>
+
+  <!-- МЕНЮ НЕДЕЛИ -->
+  <section class="screen" id="scr-menu">
+    <span class="badge-week">Неделя 24–30 ноября · бюджет до <span id="budgetEcho">2 000 ₽</span></span>
+    <h1>Ваше меню</h1>
+    <p class="sub">Меню подобрано под бюджет и предпочтения. Оцените блюда — следующее меню станет ещё точнее.</p>
+    <div id="menuList"></div>
+    <button class="btn" onclick="go('list')">Сформировать список покупок →</button>
+  </section>
+
+  <!-- СПИСОК ПОКУПОК -->
+  <section class="screen" id="scr-list">
+    <h1>Список покупок</h1>
+    <p class="sub">Собран автоматически из вашего меню. Отмечайте то, что уже есть дома.</p>
+    <div class="card">
+      <div id="shoppingList"></div>
+      <div class="total">Итого: <span id="totalVal">0 ₽</span></div>
+      <div class="hint">Вычтено то, что вы отметили «есть дома». Список можно отправить в доставку одним кликом.</div>
+      <button class="btn" onclick="go('order')">Заказать доставку →</button>
+    </div>
+  </section>
+
+  <!-- ДОСТАВКА -->
+  <section class="screen" id="scr-order">
+    <h1>Доставка</h1>
+    <p class="sub">Корзина уже собрана из вашего списка покупок.</p>
+    <div class="card">
+      <p style="margin-bottom:12px"><b>Выберите интервал доставки:</b></p>
+      <div class="row" id="slots">
+        <div class="col slot">Завтра, 09:00–12:00</div>
+        <div class="col slot on">Завтра, 18:00–21:00</div>
+        <div class="col slot">Суббота, 10:00–13:00</div>
+      </div>
+      <p style="margin:18px 0 6px">К оплате: <b id="orderTotal">0 ₽</b> · магазин: <b>«Перекрёсток»</b> (самые низкие цены по списку)</p>
+      <button class="btn" onclick="document.getElementById('okMsg').style.display='block'">Оплатить и заказать</button>
+      <div class="ok-msg" id="okMsg">✅ Заказ оформлен! Продукты приедут в выбранный интервал. Приятной готовки!</div>
+    </div>
+  </section>
+
+  <!-- ПРОФИЛЬ -->
+  <section class="screen" id="scr-profile">
+    <h1>Профиль</h1>
+    <p class="sub">Вкусы, ограничения и статистика — всё, на чём сервис учится.</p>
+    <div class="card">
+      <p><b>Ирина, 26 лет</b> · 1 порция · ужины в будни</p>
+      <p style="margin:10px 0">Любимые категории: курица, овощи, паста</p>
+      <p style="margin:10px 0">Исключить: грибы, лактозу</p>
+      <p style="margin:10px 0">Средний чек недели: <b>1 850 ₽</b> (−28% к прежним расходам)</p>
+      <p style="margin:10px 0">Продуктов, выброшенных за месяц: <b>0</b> 🎉</p>
+    </div>
+  </section>
+
+</main>
+<footer>Прототип «Шеф Недели» — демонстрационный пример для проектного задания. Данные вымышленные.</footer>
+
+<script>
+var MENU = [
+  {d:'Понедельник', n:'Паста с курицей и брокколи', t:25, p:210},
+  {d:'Вторник', n:'Курица терияки с рисом', t:35, p:190},
+  {d:'Среда', n:'Крем-суп из тыквы с гренками', t:30, p:150},
+  {d:'Четверг', n:'Ленивые голубцы в томатном соусе', t:45, p:230},
+  {d:'Пятница', n:'Овощное рагу с фетой и тостами', t:30, p:170},
+  {d:'Суббота', n:'Домашняя пицца на тонком тесте', t:40, p:250},
+  {d:'Воскресенье', n:'Омлет с овощами и зелёный салат', t:15, p:120}
+];
+var SHOP = [
+  ['Куриное филе, 900 г','Мясо',430],['Брокколи, 400 г','Овощи',160],['Паста, 500 г','Бакалея',95],
+  ['Рис, 500 г','Бакалея',110],['Тыква, 1 кг','Овощи',180],['Сливки 10%, 500 мл','Молочное',120],
+  ['Капуста белокочанная, 1 шт','Овощи',85],['Фета, 200 г','Молочное',190],['Тесто для пиццы, 2 шт','Бакалея',210],
+  ['Сыр моцарелла, 250 г','Молочное',240],['Помидоры, 600 г','Овощи',170],['Яйца, 10 шт','Бакалея',130],
+  ['Соус терияки','Бакалея',145],['Салатный микс, 150 г','Овощи',120],['Хлеб для тостов','Бакалея',65]
+];
+
+var go = function(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('scr-'+id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('active', b.dataset.scr===id)});
+  window.scrollTo(0,0);
+};
+document.querySelectorAll('nav button').forEach(function(b){ b.onclick=function(){go(this.dataset.scr)} });
+
+var fmt = function(n){ return n.toLocaleString('ru-RU') + ' ₽'; };
+
+var budget = document.getElementById('budget');
+budget.oninput = function(){ document.getElementById('budgetVal').textContent = fmt(+this.value); };
+
+document.querySelectorAll('#prefs .chip').forEach(function(c){ c.onclick=function(){this.classList.toggle('on')} });
+document.querySelectorAll('#slots .slot').forEach(function(s){ s.onclick=function(){
+  document.querySelectorAll('#slots .slot').forEach(function(x){x.classList.remove('on')}); this.classList.add('on');
+}});
+
+function generateMenu(){
+  document.getElementById('budgetEcho').textContent = fmt(+budget.value);
+  var box = document.getElementById('menuList');
+  box.innerHTML = '';
+  MENU.forEach(function(m, i){
+    var div = document.createElement('div');
+    div.className = 'meal';
+    div.innerHTML = '<div><b>' + m.d + ': ' + m.n + '</b><div class="meta">⏱ ' + m.t + ' мин · 1 порция · простые шаги</div></div>'
+      + '<div style="text-align:right"><div class="price">' + fmt(m.p) + '</div>'
+      + '<div class="rating"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span>★</span><span>★</span></div></div>';
+    div.querySelectorAll('.rating span').forEach(function(st){ st.onclick=function(){
+      st.parentElement.querySelectorAll('span').forEach(function(x){x.classList.remove('on')});
+      var arr = Array.prototype.slice.call(st.parentElement.children);
+      arr.slice(0, arr.indexOf(st)+1).forEach(function(x){x.classList.add('on')});
+    }});
+    box.appendChild(div);
+  });
+  renderList();
+  go('menu');
+}
+
+function renderList(){
+  var box = document.getElementById('shoppingList');
+  box.innerHTML = '';
+  SHOP.forEach(function(item){
+    var line = document.createElement('label');
+    line.className = 'checkline';
+    line.innerHTML = '<input type="checkbox"> <span>' + item[0] + '</span><span class="cat">' + item[1] + '</span>';
+    var price = item[2];
+    line.querySelector('input').onchange = function(){
+      line.querySelector('span:nth-child(2)').classList.toggle('strike', this.checked);
+      updateTotals();
+    };
+    box.appendChild(line);
+  });
+  updateTotals();
+}
+function updateTotals(){
+  var sum = 0;
+  document.querySelectorAll('#shoppingList .checkline').forEach(function(line){
+    if(!line.querySelector('input').checked) sum += SHOP.find(function(x){return line.textContent.includes(x[0])})[2];
+  });
+  document.getElementById('totalVal').textContent = fmt(sum);
+  document.getElementById('orderTotal').textContent = fmt(sum);
+}
+</script>
+</body>
+</html>
